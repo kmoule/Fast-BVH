@@ -1,4 +1,6 @@
 #include <algorithm>
+#include <stdexcept>
+
 #include "BVH.h"
 #include "Log.h"
 #include "Stopwatch.h"
@@ -22,8 +24,10 @@ bool BVH::getIntersection(const Ray& ray, IntersectionInfo* intersection, bool o
   float bbhits[4];
   int32_t closer, other;
 
+  constexpr int stackSize = 64;
+
   // Working set
-  BVHTraversal todo[64];
+  BVHTraversal todo[stackSize];
   int32_t stackptr = 0;
 
   // "Push" on the root node to the working set
@@ -48,7 +52,6 @@ bool BVH::getIntersection(const Ray& ray, IntersectionInfo* intersection, bool o
 
         const Object* obj = (*build_prims)[node.start+o];
         bool hit = obj->getIntersection(ray, &current);
-
         if (hit) {
           // If we're only looking for occlusion, then any hit is good enough
           if(occlusion) {
@@ -84,6 +87,10 @@ bool BVH::getIntersection(const Ray& ray, IntersectionInfo* intersection, bool o
         // It's possible that the nearest object is still in the other side, but we'll
         // check the further-awar node later...
 
+        // Check that there's room for both nodes
+        if(stackptr >= (stackSize - 2)) {
+          throw std::runtime_error("no space on stack during BVH traversal");
+        }        
         // Push the farther first
         todo[++stackptr] = BVHTraversal(other, bbhits[2]);
 
@@ -92,13 +99,20 @@ bool BVH::getIntersection(const Ray& ray, IntersectionInfo* intersection, bool o
       }
 
       else if (hitc0) {
+        if(stackptr >= (stackSize - 1)) {
+          throw std::runtime_error("no space on stack during BVH traversal");
+        }        
+
         todo[++stackptr] = BVHTraversal(ni+1, bbhits[0]);
       }
 
       else if(hitc1) {
+        if(stackptr >= (stackSize - 1)) {
+          throw std::runtime_error("no space on stack during BVH traversal");
+        }        
+
         todo[++stackptr] = BVHTraversal(ni + node.rightOffset, bbhits[2]);
       }
-
     }
   }
 
