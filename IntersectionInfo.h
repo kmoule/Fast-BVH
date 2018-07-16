@@ -1,7 +1,9 @@
 #ifndef IntersectionInfo_h_
 #define IntersectionInfo_h_
 
-class Object;
+#include "Vector3.h"
+
+struct Object;
 
 struct IntersectionInfo {
   float t; // Intersection distance along the ray

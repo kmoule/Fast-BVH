@@ -7,6 +7,7 @@
 #include <pmmintrin.h>
 #include "Log.h"
 
+
 // SSE Vector object
 struct Vector3 {
   // This is silly, but it still helps.
